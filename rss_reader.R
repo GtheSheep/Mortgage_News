@@ -1,12 +1,7 @@
 library(rvest)
 library(XML)
-
-mwProductPage <- read_html('http://www.themortgageworks.co.uk/feed/products')
-mwNewsPage <- read_html('http://www.themortgageworks.co.uk/feed/news')
-
-removePdf <- function(urlList){
-  urlList[-grep(".pdf", urlList)]
-}
+source("article_parser.R")
+source("web_util.R")
 
 mwRssLinks <- function(rssUrl){
   links <- read_html(rssUrl) %>%
@@ -21,6 +16,23 @@ getMwTitle <- function(rawHtml){
     html_text()
 }
 
+getMwDate <- function(rawHtml){
+  html_nodes(rawHtml, xpath = "//*[@id='container']/div[2]/div[2]/div[1]/div[1]/text()") %>%
+    html_text() %>%
+    as.Date("%d.%m.%Y")
+}
+
+getMwContent <- function(rawHtml){
+  html_nodes(rawHtml, xpath = "//div[@class='news_container']/p") %>% 
+    html_text()
+}
+
 parseMwUrl <- function(url){
   rawHtml <- read_html(url)
+  parsedArticle <- Article$new(title = getMwTitle(rawHtml = rawHtml),
+                               content = getMwContent(rawHtml = rawHtml),
+                               date = getMwDate(rawHtml = rawHtml),
+                               source = url
+                               )
+  return(parsedArticle)
 }

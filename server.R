@@ -6,18 +6,17 @@
 #
 
 library(shiny)
+library(shinydashboard)
+source("rss_reader.R")
 
-shinyServer(function(input, output) {
-
-  output$distPlot <- renderPlot({
-
-    # generate bins based on input$bins from ui.R
-    x    <- faithful[, 2]
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-    # draw the histogram with the specified number of bins
-    hist(x, breaks = bins, col = 'darkgray', border = 'white')
-
-  })
+shinyServer(function(input, output, session){
+  mwLinks <- c('http://www.themortgageworks.co.uk/feed/products', 'http://www.themortgageworks.co.uk/feed/news')
+  articles <- list()
+  for (source in mwLinks){
+    for (link in mwRssLinks(source)){
+      article = parseMwUrl(link)
+      articles <- c(articles, link = article)
+    }
+  }
 
 })
